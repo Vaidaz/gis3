@@ -1,16 +1,13 @@
 package gis3;
 
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
+import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
-import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.map.FeatureLayer;
-import org.geotools.map.Layer;
 import org.geotools.styling.SLD;
 import org.geotools.styling.Style;
 import org.opengis.feature.GeometryAttribute;
@@ -22,51 +19,35 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
-public class DifferenceFeatureLayerVisitor implements Visitor {
+public class ConvertMultypoligonsToPolyginsVisitor implements Visitor {
 
-	private List<String> layersToSubstract;
-	private MapFrame mapFrame;
 	private String layerName;
-	private DefaultFeatureCollection features;
+	private MapFrame mapFrame;
 	
-	DifferenceFeatureLayerVisitor(String layerToSubstract, String layerName){
-		this(Arrays.asList(layerToSubstract), layerName);
-	}
-	
-	DifferenceFeatureLayerVisitor(List<String> layersToSubstract, String layerName){
-		this.layersToSubstract = layersToSubstract;
+	ConvertMultypoligonsToPolyginsVisitor(String layerName){
 		this.layerName = layerName;
-		this.features = new DefaultFeatureCollection();		
 	}
 	
 	public void visit(MapFrame mapFrame) {
 		this.mapFrame = mapFrame;
-				
-		SimpleFeatureIterator selectedFeatures = mapFrame.getSelectedFeatures().features();
-		SimpleFeature feature = null;
-		SimpleFeature substractedFeature = null;
 		
-		while(selectedFeatures.hasNext()){
-			feature = selectedFeatures.next();
-			substractedFeature = substractFeatures(feature);
-			this.features.add(substractedFeature);
-		}
+		SimpleFeatureCollection features = mapFrame.getSelectedFeatures();
 		
-//		convertMultypolygonsToPolygons();
-
+		features = convertMultypolygonsToPolygons(features);
+		
 		Style style = SLD.createSimpleStyle(mapFrame.getSelectedLayer().getFeatureSource().getSchema());
-		FeatureLayer featureLayer = new FeatureLayer(this.features, style);
+		FeatureLayer featureLayer = new FeatureLayer(features, style);
 		featureLayer.setTitle(this.layerName);
 
 		this.mapFrame.getMapContent().addLayer(featureLayer);
-		this.mapFrame.setSelectedFeatures(this.features);
+		this.mapFrame.setSelectedFeatures(features);
 		this.mapFrame.setSelectedLayer(featureLayer);		
 
 	}
-	
-	private void convertMultypolygonsToPolygons(){
+
+	private SimpleFeatureCollection convertMultypolygonsToPolygons(SimpleFeatureCollection features){
 		DefaultFeatureCollection newFeatures = new DefaultFeatureCollection();		
-		SimpleFeatureIterator featureIterator = this.features.features();
+		SimpleFeatureIterator featureIterator = features.features();
 		SimpleFeature feature, tmpFeature;
 		MultiPolygon mp;
 		int n;
@@ -84,53 +65,7 @@ public class DifferenceFeatureLayerVisitor implements Visitor {
             } 
 
 		}
-		this.features = newFeatures;
-		System.out.println("Featurs kiekis: " + newFeatures.size());
-	}
-	
-	private SimpleFeature substractFeatures(SimpleFeature feature){
-		Layer layer = null;
-		FeatureIterator<?> featureIterator = null;
-		SimpleFeature featureToSubstract;
-				
-		for(String layerName : layersToSubstract){
-			layer = findLayer(layerName);
-			
-			if(layer != null){
-				try {
-					featureIterator = layer.getFeatureSource().getFeatures().features();
-					
-					while(featureIterator.hasNext()){
-						featureToSubstract = (SimpleFeature) featureIterator.next();				
-						feature = substract(feature, featureToSubstract);
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-					return null;
-				}
-
-			}
-
-		}
-		
-		return feature;
-	}
-	
-	private SimpleFeature substract(SimpleFeature feature, SimpleFeature featureToSubstract){
-		Geometry selectedGeometry = (Geometry) featureToSubstract.getDefaultGeometry();
-		Geometry bufferedGeometry = (Geometry) feature.getDefaultGeometry();
-		Geometry newGeometry = bufferedGeometry.difference(selectedGeometry);
-		return makeFeature(newGeometry, feature);
-	}
-		
-	private Layer findLayer(String layerName){
-		for(Layer layer : mapFrame.getMapContent().layers()){
-			if(layer.getTitle().equals(layerName)){
-				return layer;
-			}
-		}
-		
-		return null;
+		return newFeatures;
 	}
 	
 	private SimpleFeature makeFeature(Geometry geometry, SimpleFeature feature){

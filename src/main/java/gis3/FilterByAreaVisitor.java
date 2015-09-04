@@ -32,9 +32,10 @@ public class FilterByAreaVisitor implements Visitor {
 		while(selectedFeatures.hasNext()){
 			feature = selectedFeatures.next();
 			featureGeometry = (Geometry) feature.getDefaultGeometry();
-			featureArea = featureGeometry.getArea() / 1000000; // meters
-			System.out.println(featureArea);
+			featureArea = featureGeometry.getArea() / 10000; // meters
 			if(featureArea >= this.m){
+				
+				System.out.println(featureArea);
 				newFeatures.add(feature);
 			}
 		}

@@ -61,8 +61,14 @@ public class MapFrame extends JMapFrame implements Visitable {
 	}
 	
 	public void addDataLayers(){
+//    	addLayer("shp/gis3/sven_SAV_P.shp", "sven_SAV_P", true);
+//    	addLayer("shp/gis3/sven_PLO_P.shp", "sven_PLO_P", false);
+//    	addLayer("shp/gis3/sven_PAS_P.shp", "sven_PAS_P", false);
+//    	addLayer("shp/gis3/Vietoves_P.shp", "Vietoves_P", false);
+//    	addLayer("shp/gis3/sven_HID_P.shp", "sven_HID_L", false);
+		
     	addLayer("shp/gis3/sven_SAV_P.shp", "sven_SAV_P", true);
-    	addLayer("shp/gis3/sven_PLO_P.shp", "sven_PLO_P", false);
+    	addLayer("shp/gis3/medziai_upes_ezerai.shp", "medziai_upes_ezerai", false);
     	addLayer("shp/gis3/sven_PAS_P.shp", "sven_PAS_P", false);
     	addLayer("shp/gis3/Vietoves_P.shp", "Vietoves_P", false);
     	addLayer("shp/gis3/sven_HID_P.shp", "sven_HID_L", false);
